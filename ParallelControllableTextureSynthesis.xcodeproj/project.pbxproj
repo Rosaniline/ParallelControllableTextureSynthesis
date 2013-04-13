@@ -48,6 +48,7 @@
 /* Begin PBXFileReference section */
 		268FB72A1717FD3B005AA5AC /* ParallelControllableTextureSynthesis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParallelControllableTextureSynthesis.cpp; sourceTree = "<group>"; };
 		268FB72B1717FD3B005AA5AC /* ParallelControllableTextureSynthesis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParallelControllableTextureSynthesis.h; sourceTree = "<group>"; };
+		268FB72D17180468005AA5AC /* tx.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = tx.jpg; sourceTree = "<group>"; };
 		26E478D01717B7F400E71AF7 /* ParallelControllableTextureSynthesis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ParallelControllableTextureSynthesis; sourceTree = BUILT_PRODUCTS_DIR; };
 		26E478D31717B7F400E71AF7 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		26E478D51717B7F400E71AF7 /* ParallelControllableTextureSynthesis.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = ParallelControllableTextureSynthesis.1; sourceTree = "<group>"; };
@@ -129,6 +130,7 @@
 				268FB72B1717FD3B005AA5AC /* ParallelControllableTextureSynthesis.h */,
 				268FB72A1717FD3B005AA5AC /* ParallelControllableTextureSynthesis.cpp */,
 				26E478D51717B7F400E71AF7 /* ParallelControllableTextureSynthesis.1 */,
+				268FB72D17180468005AA5AC /* tx.jpg */,
 			);
 			path = ParallelControllableTextureSynthesis;
 			sourceTree = "<group>";
