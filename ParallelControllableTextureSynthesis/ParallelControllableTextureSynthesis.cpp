@@ -24,10 +24,11 @@ Mat ParallelControllableTextureSynthesis::synthesis(const string &texture_file, 
     
     sample_texture = imread(texture_file.c_str());
     sample_texture_path = texture_file;
-
     
     similarSetConstruction();
-    
+//
+//    initialization(magnify_ratio);
+//    
 //    for (int i = 1; i <= PYRAMID_LEVEL; i ++) {
 //        
 //        upsample(i);
@@ -38,7 +39,6 @@ Mat ParallelControllableTextureSynthesis::synthesis(const string &texture_file, 
 //        correction(i);
 //        coordinateMapping(i);
 //        showMat(syn_texture[i]);
-////        correction();
 //        
 //    }
     
@@ -70,9 +70,9 @@ void ParallelControllableTextureSynthesis::initialization(double magnify_ratio) 
 
     
     
-//    for (int i = 0; i < syn_coor.size(); i ++) {
-//        cout<<syn_coor[i].rows<<", "<<syn_texture[i].rows<< endl;
-//    }
+    for (int i = 0; i < syn_coor.size(); i ++) {
+        cout<<syn_coor[i].rows<<", "<<syn_texture[i].rows<< endl;
+    }
     
     
 }
@@ -121,58 +121,60 @@ void ParallelControllableTextureSynthesis::jitter (int level) {
 
 void ParallelControllableTextureSynthesis::correction(int level) {
     
-    Mat re_texture = sample_texture.clone();
-    if ( syn_coor[level].rows < sample_texture.rows ) {
-        resize(sample_texture, re_texture, syn_texture[level].size());
-    }
     
-    dynamicArray2D<Point> temp_coor(syn_coor[level].rows, syn_coor[level].cols);
-    
-    for (int i = 0; i < syn_texture[level].rows; i ++) {
-        for (int j = 0; j < syn_texture[level].cols; j ++) {
-            
-
-            double min_cost = INFINITY;
-            Point min_loc(0);
-            
-            for (int m = -COHERENCE_SEARCH_W; m <= COHERENCE_SEARCH_W; m ++) {
-                for (int n = -COHERENCE_SEARCH_W; n <= COHERENCE_SEARCH_W; n ++) {
-                    
-                    double local_cost = 0;
-                    int valid_count = 0;
-                    
-                    for (int p = -PATCH_WIDTH; p <= PATCH_WIDTH; p ++) {
-                        for (int q = -PATCH_WIDTH; q <= PATCH_WIDTH; q ++) {
-                            
-                            if ( (syn_coor[level].at(i, j).y + m + p) >= 0 && (syn_coor[level].at(i, j).y + m + p) < syn_texture[level].rows
-                                && (syn_coor[level].at(i, j).x + n + q) >= 0 && (syn_coor[level].at(i, j).x + n + q) < syn_texture[level].cols
-                                && (i + p) >= 0 && (i + p) < syn_texture[level].rows
-                                && (j + q) >= 0 && (j + q) < syn_texture[level].cols ) {
-                                
-                                local_cost += Vec3bDiff(syn_texture[level].at<Vec3b>(i + p, j + q), re_texture.at<Vec3b>(syn_coor[level].at(i, j).y + m + p, syn_coor[level].at(i, j).x + n + q));
-                                valid_count ++;
-                                
-                            }
-                            
-                        }
-                    }
-                    
-                    local_cost /= valid_count;
-                    if ( local_cost < min_cost ) {
-                        min_cost = local_cost;
-                        min_loc = Point(syn_coor[level].at(i, j).x + n, syn_coor[level].at(i, j).y + m);
-                    }
-                    
-                }
-            }
-            
-            temp_coor.at(i, j) = min_loc;
-            
-        }
-    }
-    
-    
-    syn_coor[level] = temp_coor;
+    double local_shrink_ratio = (double)syn_texture[level].rows/sample_texture.rows;
+//    Mat re_texture = sample_texture.clone();
+//    if ( syn_coor[level].rows < sample_texture.rows ) {
+//        resize(sample_texture, re_texture, syn_texture[level].size());
+//    }
+//    
+//    dynamicArray2D<Point> temp_coor(syn_coor[level].rows, syn_coor[level].cols);
+//    
+//    for (int i = 0; i < syn_texture[level].rows; i ++) {
+//        for (int j = 0; j < syn_texture[level].cols; j ++) {
+//            
+//
+//            double min_cost = INFINITY;
+//            Point min_loc(0);
+//            
+//            for (int m = -COHERENCE_SEARCH_W; m <= COHERENCE_SEARCH_W; m ++) {
+//                for (int n = -COHERENCE_SEARCH_W; n <= COHERENCE_SEARCH_W; n ++) {
+//                    
+//                    double local_cost = 0;
+//                    int valid_count = 0;
+//                    
+//                    for (int p = -PATCH_WIDTH; p <= PATCH_WIDTH; p ++) {
+//                        for (int q = -PATCH_WIDTH; q <= PATCH_WIDTH; q ++) {
+//                            
+//                            if ( (syn_coor[level].at(i, j).y + m + p) >= 0 && (syn_coor[level].at(i, j).y + m + p) < syn_texture[level].rows
+//                                && (syn_coor[level].at(i, j).x + n + q) >= 0 && (syn_coor[level].at(i, j).x + n + q) < syn_texture[level].cols
+//                                && (i + p) >= 0 && (i + p) < syn_texture[level].rows
+//                                && (j + q) >= 0 && (j + q) < syn_texture[level].cols ) {
+//                                
+//                                local_cost += Vec3bDiff(syn_texture[level].at<Vec3b>(i + p, j + q), re_texture.at<Vec3b>(syn_coor[level].at(i, j).y + m + p, syn_coor[level].at(i, j).x + n + q));
+//                                valid_count ++;
+//                                
+//                            }
+//                            
+//                        }
+//                    }
+//                    
+//                    local_cost /= valid_count;
+//                    if ( local_cost < min_cost ) {
+//                        min_cost = local_cost;
+//                        min_loc = Point(syn_coor[level].at(i, j).x + n, syn_coor[level].at(i, j).y + m);
+//                    }
+//                    
+//                }
+//            }
+//            
+//            temp_coor.at(i, j) = min_loc;
+//            
+//        }
+//    }
+//    
+//    
+//    syn_coor[level] = temp_coor;
     
     
 }
@@ -322,17 +324,17 @@ void ParallelControllableTextureSynthesis::similarSetConstruction() {
     
     
     
-    for (int i = 0; i < sample_similar_set.rows; i ++) {
-        for (int j = 0; j < sample_similar_set.cols; j ++) {
-            
-            for (int p = 0; p < sample_similar_set.at(i, j).size(); p ++) {
-                cout<<sample_similar_set.at(i, j)[p]<<", ";
-            }
-            
-            cout<<endl;
-            
-        }
-    }
+//    for (int i = 0; i < sample_similar_set.rows; i ++) {
+//        for (int j = 0; j < sample_similar_set.cols; j ++) {
+//            
+//            for (int p = 0; p < sample_similar_set.at(i, j).size(); p ++) {
+//                cout<<sample_similar_set.at(i, j)[p]<<", ";
+//            }
+//            
+//            cout<<endl;
+//            
+//        }
+//    }
     
     
 

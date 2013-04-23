@@ -20,9 +20,13 @@ class ParallelControllableTextureSynthesis {
     
 public:
     
+    // Default constructor
     ParallelControllableTextureSynthesis();
+    
+    // Default destructor
     ~ParallelControllableTextureSynthesis();
     
+    // Begin synthesizing
     cv::Mat synthesis (const string& texture_file, double magnify_ratio);
     
 
@@ -30,15 +34,25 @@ public:
     
 private:
     
+    // Initialize arrays including synthesized pyramid and coordinate pyramid
     void initialization (double magnify_ratio);
     
+    // Upsampling
     void upsample (int level);
+    
+    // Basic jitter
     void jitter (int level);
+    
+    // Basic correction
     void correction (int level);
     
+    // Maps coordinate to synthesized texture
     void coordinateMapping (int level);
+    
+    // Cut off the coordinates outside of texture boundary
     void coordinateTrim (Point& coor);
     
+    // Construct similar set of given input sample texture
     void similarSetConstruction ();
     
     Mat sample_texture;
@@ -49,7 +63,7 @@ private:
     
     string sample_texture_path;
     
-    static const int    PYRAMID_LEVEL       =   2;
+    static const int    PYRAMID_LEVEL       =   6;
     static const int    OUTSPACE_FACTOR     =   1;
     static const int    JITTER_AMPLITUDE    =   1;
     static const int    PATCH_WIDTH         =   2;
