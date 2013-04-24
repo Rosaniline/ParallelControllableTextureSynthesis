@@ -49,25 +49,28 @@ private:
     // Maps coordinate to synthesized texture
     void coordinateMapping (int level);
     
-    // Cut off the coordinates outside of texture boundary
-    void coordinateTrim (Point& coor);
-    
     // Construct similar set of given input sample texture
     void similarSetConstruction ();
     
-    Mat sample_texture;
-    Mat synthesized_texture;
+    
+    
+    void showCoordinate(dynamicArray2D<Point> &coorMap, Mat& sample);
+    
+    Mat sample_texture, synthesized_texture;
+    
     vector<dynamicArray2D<Point> > syn_coor;
-    vector<Mat> syn_texture;
+    vector<Mat> syn_texture, sample_pyr;
     dynamicArray2D<vector<Point> > sample_similar_set;
     
     string sample_texture_path;
     
-    static const int    PYRAMID_LEVEL       =   6;
+    patchTools patch;
+    
+    static const int    PYRAMID_LEVEL       =   3;
     static const int    OUTSPACE_FACTOR     =   1;
     static const int    JITTER_AMPLITUDE    =   1;
     static const int    PATCH_WIDTH         =   2;
-    static const int    COHERENCE_SEARCH_W  =   5;
+    static const int    COHERENCE_SEARCH_W  =   2;
     static const int    SIMILAR_NEIGHBOR_N  =  10;
     
     

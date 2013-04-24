@@ -11,6 +11,8 @@
 
 ParallelControllableTextureSynthesis::ParallelControllableTextureSynthesis () {
     
+    patch = patchTools(2*PATCH_WIDTH + 1, 2*PATCH_WIDTH + 1);
+    
     srand((int)time(NULL));
     
 }
@@ -26,21 +28,46 @@ Mat ParallelControllableTextureSynthesis::synthesis(const string &texture_file, 
     sample_texture_path = texture_file;
     
     similarSetConstruction();
-//
-//    initialization(magnify_ratio);
-//    
-//    for (int i = 1; i <= PYRAMID_LEVEL; i ++) {
-//        
-//        upsample(i);
-//        jitter(i);
-//        coordinateMapping(i);
-//        showMat(syn_texture[i]);
-//        
-//        correction(i);
-//        coordinateMapping(i);
-//        showMat(syn_texture[i]);
-//        
-//    }
+
+    initialization(magnify_ratio);
+
+
+    for (int i = 1; i <= PYRAMID_LEVEL; i ++) {
+        
+
+        
+        upsample(i);
+        coordinateMapping(i);
+        
+//        showMat(temp, "upsampled_temp", 0);
+        showMat(syn_texture[i], "upsampled", 0);
+        showCoordinate(syn_coor[i], syn_texture[i]);
+        
+        if ( i == 1 ) {
+            jitter(i);
+        }
+        
+//        syn_coor[i].forEach_withCorr([](Point pt, int i, int j) {
+//            
+//            cout<<pt<<", ";
+//            
+//        });
+        
+        coordinateMapping(i);
+        showMat(syn_texture[i], "jittered", 1);
+        showCoordinate(syn_coor[i], syn_texture[i]);
+        
+        for (int k = 0; k < 8; k ++) {
+            cout<<k<<", ";
+            correction(i);
+
+        } cout<<endl;
+        coordinateMapping(i);
+        showMat(syn_texture[i], "corrected", 0);
+        showCoordinate(syn_coor[i], syn_texture[i]);
+
+        
+    }
     
     return synthesized_texture;
 }
@@ -58,6 +85,15 @@ void ParallelControllableTextureSynthesis::initialization(double magnify_ratio) 
         dynamicArray2D<Point> local_coor (texture.rows, texture.cols);
         syn_coor.push_back(local_coor);
         
+        // Initialized pyramid of sample texture
+        Mat temp_sample = sample_texture.clone();
+        
+        if ( temp_sample.rows > texture.rows ) {
+            resize(sample_texture, temp_sample, texture.size());
+        }
+        
+        sample_pyr.push_back(temp_sample);
+        
     });
     
     
@@ -67,12 +103,7 @@ void ParallelControllableTextureSynthesis::initialization(double magnify_ratio) 
         coor = Point(j, i);
  
     });
-
     
-    
-    for (int i = 0; i < syn_coor.size(); i ++) {
-        cout<<syn_coor[i].rows<<", "<<syn_texture[i].rows<< endl;
-    }
     
     
 }
@@ -80,27 +111,12 @@ void ParallelControllableTextureSynthesis::initialization(double magnify_ratio) 
 
 void ParallelControllableTextureSynthesis::upsample(int level) {
     
-//    for (int i = 0; i < syn_coor[level - 1].rows; i ++) {
-//        for (int j = 0; j < syn_coor[level - 1].cols; j ++) {
-//            
-//            syn_coor[level].at(i*2    , j*2    ) = syn_coor[level - 1].at(i, j)*2;
-//            syn_coor[level].at(i*2 + 1, j*2    ) = syn_coor[level - 1].at(i, j)*2 + Point(1, 0);
-//            syn_coor[level].at(i*2    , j*2 + 1) = syn_coor[level - 1].at(i, j)*2 + Point(0, 1);
-//            syn_coor[level].at(i*2 + 1, j*2 + 1) = syn_coor[level - 1].at(i, j)*2 + Point(0, 0);
-//            
-//        }
-//    }
-
-    syn_coor[level].forEach_withCorr([&](Point& texture, int i, int j) {
+    syn_coor[level].forEach_withCorr([&](Point &coor, int i, int j) {
         
-        texture = syn_coor[level - 1].at(i/2, j/2)*2 + Point(j%2, i%2);
-    
-        coordinateTrim(texture);
+        coor = 2*syn_coor[level - 1].at(i/2, j/2) + Point(j%2, i%2);
         
-        
+        coor = Point(coor.x % sample_pyr[level].cols, coor.y % sample_pyr[level].rows);
     });
-    
-    
     
     
 }
@@ -110,88 +126,91 @@ void ParallelControllableTextureSynthesis::jitter (int level) {
     
     syn_coor[level].forEach([=](Point& coor) {
         
-        coor = coor + Point(ceil((rand()%3 - 1) + 0.5), ceil((rand()%3 - 1) + 0.5))*JITTER_AMPLITUDE;
+        coor = coor + Point(rand()%3 - 1, rand()%3 - 1);//Point(floor((rand()%3 - 1) + 0.5), floor((rand()%3 - 1) + 0.5))*JITTER_AMPLITUDE;
         
-        coordinateTrim(coor);
+        // trim coordinate from breaking the boundary
+        coor = Point((coor.x + sample_pyr[level].cols)%sample_pyr[level].cols, (coor.y + sample_pyr[level].rows) % sample_pyr[level].rows);
         
     });
     
 }
 
 
-void ParallelControllableTextureSynthesis::correction(int level) {
+void ParallelControllableTextureSynthesis::correction (int level) {
+    
+    Mat resizedSample = sample_pyr[level].clone();
     
     
-    double local_shrink_ratio = (double)syn_texture[level].rows/sample_texture.rows;
-//    Mat re_texture = sample_texture.clone();
-//    if ( syn_coor[level].rows < sample_texture.rows ) {
-//        resize(sample_texture, re_texture, syn_texture[level].size());
-//    }
-//    
-//    dynamicArray2D<Point> temp_coor(syn_coor[level].rows, syn_coor[level].cols);
-//    
-//    for (int i = 0; i < syn_texture[level].rows; i ++) {
-//        for (int j = 0; j < syn_texture[level].cols; j ++) {
-//            
-//
-//            double min_cost = INFINITY;
-//            Point min_loc(0);
-//            
-//            for (int m = -COHERENCE_SEARCH_W; m <= COHERENCE_SEARCH_W; m ++) {
-//                for (int n = -COHERENCE_SEARCH_W; n <= COHERENCE_SEARCH_W; n ++) {
-//                    
-//                    double local_cost = 0;
-//                    int valid_count = 0;
-//                    
-//                    for (int p = -PATCH_WIDTH; p <= PATCH_WIDTH; p ++) {
-//                        for (int q = -PATCH_WIDTH; q <= PATCH_WIDTH; q ++) {
+    for (int pass = 0; pass < 4; pass ++) {
+        
+        for (int i = pass/2; i < syn_texture[level].rows; i += 2) {
+            for (int j = pass%2; j < syn_texture[level].cols; j += 2) {
+                
+                double local_cost = 0, min_cost = INFINITY;
+                Point min_loc(0);
+            
+                for (int m = -COHERENCE_SEARCH_W; m <= COHERENCE_SEARCH_W; m ++) {
+                    for (int n = -COHERENCE_SEARCH_W; n <= COHERENCE_SEARCH_W; n ++) {
+                        
+                        Point target = syn_coor[level].at(i, j) + Point(n, m);
+                        target = Point(target.x % resizedSample.cols, target.y % resizedSample.rows);
+                        
+                        
+                        local_cost = patch.SSD(syn_texture[level], Point(j, i), resizedSample, target);
+                        
+                        if ( local_cost < min_cost ) {
+                            
+                            min_cost = local_cost;
+                            min_loc = target;
+                        }
+                        
+                    }
+
+                }
+                
+//                for (int m = -1; m <= 1; m ++) {
+//                    for (int n = -1; n <= 1; n ++) {
+//                        
+//                        Point target = syn_coor[level].at(i, j) + Point(n, m);
+//                        target = Point(target.x % resizedSample.cols, target.y % resizedSample.rows);
+//                        
+//                        
+//                        local_cost = patch.SSD(syn_texture[level], Point(j, i), resizedSample, target);
+//                        
+//                        if ( local_cost < min_cost ) {
 //                            
-//                            if ( (syn_coor[level].at(i, j).y + m + p) >= 0 && (syn_coor[level].at(i, j).y + m + p) < syn_texture[level].rows
-//                                && (syn_coor[level].at(i, j).x + n + q) >= 0 && (syn_coor[level].at(i, j).x + n + q) < syn_texture[level].cols
-//                                && (i + p) >= 0 && (i + p) < syn_texture[level].rows
-//                                && (j + q) >= 0 && (j + q) < syn_texture[level].cols ) {
-//                                
-//                                local_cost += Vec3bDiff(syn_texture[level].at<Vec3b>(i + p, j + q), re_texture.at<Vec3b>(syn_coor[level].at(i, j).y + m + p, syn_coor[level].at(i, j).x + n + q));
-//                                valid_count ++;
-//                                
-//                            }
-//                            
+//                            min_cost = local_cost;
+//                            min_loc = target;
 //                        }
+//                        
 //                    }
-//                    
-//                    local_cost /= valid_count;
-//                    if ( local_cost < min_cost ) {
-//                        min_cost = local_cost;
-//                        min_loc = Point(syn_coor[level].at(i, j).x + n, syn_coor[level].at(i, j).y + m);
-//                    }
-//                    
 //                }
-//            }
-//            
-//            temp_coor.at(i, j) = min_loc;
-//            
-//        }
-//    }
-//    
-//    
-//    syn_coor[level] = temp_coor;
+                
+                
+                
+                syn_coor[level].at(i, j) = min_loc;
+            }
+        }
+        
+    }
+    
+
     
     
 }
 
 
+
+
 void ParallelControllableTextureSynthesis::coordinateMapping(int level) {
     
     
-    Mat re_texture = sample_texture.clone();
-    if ( syn_coor[level].rows < sample_texture.rows ) {
-        resize(sample_texture, re_texture, syn_texture[level].size());
-    }
+    
     
     for (int i = 0; i < syn_texture[level].rows; i ++) {
-        for (int j = 0; j < syn_texture[level].cols; j ++) {
+        for (int j = 0; j < syn_texture[level].cols; j ++) {        
             
-            syn_texture[level].at<Vec3b>(i, j) = re_texture.at<Vec3b>(syn_coor[level].at(i, j));
+            syn_texture[level].at<Vec3b>(i, j) = sample_pyr[level].at<Vec3b>(syn_coor[level].at(i, j));
             
         }
     }
@@ -199,14 +218,6 @@ void ParallelControllableTextureSynthesis::coordinateMapping(int level) {
     
     
 }
-
-
-void ParallelControllableTextureSynthesis::coordinateTrim(Point &coor) {
-    
-    coor = Point(coor.x % sample_texture.rows, coor.y % sample_texture.cols);
-    
-}
-
 
 
 void ParallelControllableTextureSynthesis::similarSetConstruction() {
@@ -343,6 +354,32 @@ void ParallelControllableTextureSynthesis::similarSetConstruction() {
 }
 
 
+void ParallelControllableTextureSynthesis::showCoordinate(dynamicArray2D<Point> &coorMap, Mat& sample) {
+    
+    Mat temp_show;
+    
+    if ( sample.rows > sample_texture.rows ) {
+        temp_show = sample_texture.clone();
+    }
+    
+    else {
+        temp_show = sample.clone();
+    }
+    
+    Mat temp = Mat(coorMap.rows, coorMap.cols, CV_8UC3);
+    
+    for (int i = 0; i < temp.rows; i ++) {
+        for (int j = 0; j < temp.cols; j ++) {
+            
+            temp.at<Vec3b>(i, j) = Vec3b(0, (temp.rows - 1 - coorMap.at(i, j).y)%temp_show.rows*(255.0/temp_show.rows),  coorMap.at(i, j).x%temp_show.cols*(255.0/temp_show.cols));
+            
+            
+        }
+    }
+    
+    resizeMat(temp, 3.0);
+    showMat(temp);
+}
 
 
 

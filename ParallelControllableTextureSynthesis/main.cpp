@@ -16,6 +16,10 @@ int main(int argc, const char * argv[])
     
     
     textsyn.synthesis("/Users/xup6qup3/Google Drive/code/Dev.temp/ParallelControllableTextureSynthesis/ParallelControllableTextureSynthesis/tx.jpg", 4.0);
+    
+    
+    
+    
 
 
 
