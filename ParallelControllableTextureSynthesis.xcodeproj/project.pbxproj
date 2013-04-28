@@ -47,6 +47,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		262BE8021727C015002E5084 /* cir.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = cir.jpg; sourceTree = "<group>"; };
 		2668E55917262A750074CE0D /* libopencv_calib3d.2.4.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_calib3d.2.4.5.dylib; path = /opt/local/lib/libopencv_calib3d.2.4.5.dylib; sourceTree = "<absolute>"; };
 		2668E55A17262A750074CE0D /* libopencv_contrib.2.4.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_contrib.2.4.5.dylib; path = /opt/local/lib/libopencv_contrib.2.4.5.dylib; sourceTree = "<absolute>"; };
 		2668E55B17262A760074CE0D /* libopencv_core.2.4.5.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopencv_core.2.4.5.dylib; path = /opt/local/lib/libopencv_core.2.4.5.dylib; sourceTree = "<absolute>"; };
@@ -132,6 +133,7 @@
 				26E478D31717B7F400E71AF7 /* main.cpp */,
 				268FB72B1717FD3B005AA5AC /* ParallelControllableTextureSynthesis.h */,
 				268FB72A1717FD3B005AA5AC /* ParallelControllableTextureSynthesis.cpp */,
+				262BE8021727C015002E5084 /* cir.jpg */,
 				26E478D51717B7F400E71AF7 /* ParallelControllableTextureSynthesis.1 */,
 				268FB72D17180468005AA5AC /* tx.jpg */,
 			);

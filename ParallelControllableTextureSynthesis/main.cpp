@@ -15,7 +15,9 @@ int main(int argc, const char * argv[])
     ParallelControllableTextureSynthesis textsyn = ParallelControllableTextureSynthesis();
     
     
-    textsyn.synthesis("/Users/xup6qup3/Google Drive/code/Dev.temp/ParallelControllableTextureSynthesis/ParallelControllableTextureSynthesis/tx.jpg", 4.0);
+//    textsyn.synthesis("/Users/xup6qup3/Google Drive/code/Dev.temp/ParallelControllableTextureSynthesis/ParallelControllableTextureSynthesis/tx.jpg", 4.0);
+    
+    textsyn.guidedSynthesis("/Users/xup6qup3/Google Drive/code/Dev.temp/ParallelControllableTextureSynthesis/ParallelControllableTextureSynthesis/tx.jpg", "/Users/xup6qup3/Google Drive/code/Dev.temp/ParallelControllableTextureSynthesis/ParallelControllableTextureSynthesis/cir.jpg");
     
     
     

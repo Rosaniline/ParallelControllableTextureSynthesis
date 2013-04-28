@@ -22,61 +22,88 @@ ParallelControllableTextureSynthesis::~ParallelControllableTextureSynthesis() {
 }
 
 
-Mat ParallelControllableTextureSynthesis::synthesis(const string &texture_file, double magnify_ratio) {
+Mat ParallelControllableTextureSynthesis::guidedSynthesis(const string &texture, const string &guide) {
     
-    sample_texture = imread(texture_file.c_str());
-    sample_texture_path = texture_file;
+    guide_img = imread(guide.c_str());
+    sample_texture = imread(texture.c_str());
     
-    similarSetConstruction();
-
-    initialization(magnify_ratio);
-
-
-    for (int i = 1; i <= PYRAMID_LEVEL; i ++) {
-        
-
+    initialization();
+    
+    for (int i = 1; i < PYRAMID_LEVEL; i ++) {
         
         upsample(i);
-        coordinateMapping(i);
-        
-//        showMat(temp, "upsampled_temp", 0);
-        showMat(syn_texture[i], "upsampled", 0);
-        showCoordinate(syn_coor[i], syn_texture[i]);
-        
-        if ( i == 1 ) {
-            jitter(i);
-        }
-        
-//        syn_coor[i].forEach_withCorr([](Point pt, int i, int j) {
-//            
-//            cout<<pt<<", ";
-//            
-//        });
         
         coordinateMapping(i);
-        showMat(syn_texture[i], "jittered", 1);
-        showCoordinate(syn_coor[i], syn_texture[i]);
+        showMat(syn_texture[i], "ORI", 1);
         
-        for (int k = 0; k < 8; k ++) {
-            cout<<k<<", ";
+        pull(i);
+        
+        coordinateMapping(i);
+        showMat(syn_texture[i], "PULL", 1);
+        
+        
+        for (int i = 0; i < 8; i ++) {
+            cout<<i<<", ";
             correction(i);
-
         } cout<<endl;
+        
         coordinateMapping(i);
-        showMat(syn_texture[i], "corrected", 0);
-        showCoordinate(syn_coor[i], syn_texture[i]);
-
+        showMat(syn_texture[i], "COR", 0);
+        
+        
         
     }
     
-    return synthesized_texture;
+    
+    return guide_img;
+}
+
+
+void ParallelControllableTextureSynthesis::pull(int level) {
+    
+    double alpha = 0.5;
+    
+    for (int i = 0; i < syn_texture[level].rows; i ++) {
+        for (int j = 0; j < syn_texture[level].cols; j ++) {
+            
+            double min_cost = INFINITY, local_cost = 0;
+            Point min_loc(0);
+            
+            for (int m = -COHERENCE_SEARCH_W; m <= COHERENCE_SEARCH_W; m ++) {
+                for (int n = -COHERENCE_SEARCH_W; n <= COHERENCE_SEARCH_W; n ++) {
+                    
+                    Point target = syn_coor[level].at(i, j) + Point(n, m);
+                    target = Point(target.x % sample_pyr[level].cols, target.y % sample_pyr[level].rows);
+                    
+                    
+                    local_cost = alpha*patch.SSD(guide_pyr[level], Point(j, i), sample_pyr[level], target) + 0.35*patch.SSD(syn_texture[level], Point(j, i), sample_pyr[level], target);
+                    
+                    if ( local_cost < min_cost ) {
+                        
+                        min_cost = local_cost;
+                        min_loc = target;
+                    }
+                    
+                }
+                
+            }
+            
+//            cout<<syn_coor[level].at(i, j)<<", "<<min_loc;
+            syn_coor[level].at(i, j) = min_loc;
+            
+        }
+    }
+    
+    
+    
+    
 }
 
 
 
-void ParallelControllableTextureSynthesis::initialization(double magnify_ratio) {
+void ParallelControllableTextureSynthesis::initialization() {
     
-    buildPyramid(Mat(sample_texture.rows*magnify_ratio, sample_texture.cols*magnify_ratio, CV_8UC3), syn_texture, PYRAMID_LEVEL);
+    buildPyramid(Mat(guide_img.rows, guide_img.cols, CV_8UC3), syn_texture, PYRAMID_LEVEL);
     
     reverse(syn_texture.begin(), syn_texture.end());
     
@@ -93,6 +120,14 @@ void ParallelControllableTextureSynthesis::initialization(double magnify_ratio) 
         }
         
         sample_pyr.push_back(temp_sample);
+        
+        
+        // Initialized pyramid of guide image
+        Mat temp_guide;
+        resize(guide_img, temp_guide, texture.size());
+        
+        guide_pyr.push_back(temp_guide);
+        
         
     });
     
@@ -138,7 +173,7 @@ void ParallelControllableTextureSynthesis::jitter (int level) {
 
 void ParallelControllableTextureSynthesis::correction (int level) {
     
-    Mat resizedSample = sample_pyr[level].clone();
+//    Mat resizedSample = sample_pyr[level].clone();
     
     
     for (int pass = 0; pass < 4; pass ++) {
@@ -153,10 +188,10 @@ void ParallelControllableTextureSynthesis::correction (int level) {
                     for (int n = -COHERENCE_SEARCH_W; n <= COHERENCE_SEARCH_W; n ++) {
                         
                         Point target = syn_coor[level].at(i, j) + Point(n, m);
-                        target = Point(target.x % resizedSample.cols, target.y % resizedSample.rows);
+                        target = Point(target.x % sample_pyr[level].cols, target.y % sample_pyr[level].rows);
                         
                         
-                        local_cost = patch.SSD(syn_texture[level], Point(j, i), resizedSample, target);
+                        local_cost = patch.SSD(syn_texture[level], Point(j, i), sample_pyr[level], target);
                         
                         if ( local_cost < min_cost ) {
                             
